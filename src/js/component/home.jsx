@@ -1,5 +1,5 @@
 import { element } from "prop-types";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 //create your first component
 const Home = () => {
@@ -7,26 +7,46 @@ const Home = () => {
 	const [todo, setTodo] = useState([]);
 	const agregartask = () => {
 		if (task !== "") {
-			setTodo([...todo, task]);
+			setTodo([...todo, { label: task, done: false }]);
 			setTask("");
+			actualizartask([...todo, { label: task, done: false }]);
 		}
 	};
 	const eliminartask = index => {
-		console.log(index);
 		let todofiltrados = todo.filter((element, i) => {
 			if (index !== i) {
 				return element;
 			}
 		});
 		setTodo(todofiltrados);
-		//estilo
+		actualizartask(todofiltrados);
 	};
+	useEffect(() => {
+		fetch("https://assets.breatheco.de/apis/fake/todos/user/kevinbullor")
+			.then(response => response.json())
+			.then(data => setTodo(data));
+	}, []);
+	const actualizartask = task => {
+		let url =
+			"https://assets.breatheco.de/apis/fake/todos/user/kevinbullor";
+		let data = task;
 
+		fetch(url, {
+			method: "PUT",
+			body: JSON.stringify(data),
+			headers: {
+				"Content-Type": "application/json"
+			}
+		})
+			.then(res => res.json())
+			.catch(error => console.error("Error:", error))
+			.then(response => console.log("Success:", response));
+	};
 	return (
 		<div className="container">
-			<h2>todos</h2>
-			<div class="row g-3 align-items-center">
-				<div class="col-8">
+			<h2 className="fst-italic text-white-50 bg-dark">To-do list</h2>
+			<div className="row g-3 align-items-center">
+				<div className="col-10">
 					<input
 						className="form-control"
 						type="text"
@@ -34,27 +54,33 @@ const Home = () => {
 						value={task}
 					/>
 				</div>
-				<div class="col-4">
+				<div className="col-2">
 					<button
 						className="btn btn-outline-dark w-100"
 						onClick={agregartask}>
-						add
+						Add Task
 					</button>
 				</div>
 			</div>
-
 			<ul>
 				{todo.map((item, index) => (
-					<li key={index}>
-						{item}{" "}
-						<span onClick={() => eliminartask(index)}>x</span>
+					<li className="text-secondary" key={index}>
+						{item.label}{" "}
+						<span onClick={() => eliminartask(index)}>
+							<i className="far fa-trash-alt"></i>
+						</span>
 					</li>
 				))}
 			</ul>
-			{todo.length > 0 && <span>tareas por hacer: {todo.length}</span>}
-			{todo.length == 0 && <span>No hay tareas por hacer</span>}
+			{todo.length > 0 && (
+				<span className="text-secondary">
+					tareas por hacer: {todo.length}
+				</span>
+			)}
+			{todo.length == 0 && (
+				<span className="text-secondary">No hay tareas por hacer</span>
+			)}
 		</div>
 	);
 };
-
 export default Home;
